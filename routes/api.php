@@ -7,6 +7,7 @@ use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\GameController;
+use Laravel\Passport\Http\Middleware\CheckTokenForAnyScope;
 
 use App\Http\Middleware\ApiForceAcceptHeader;
 
@@ -28,10 +29,11 @@ Route::post('/players', [PlayerController::class, 'store'])->middleware([ApiForc
 
 Route::middleware([ApiForceAcceptHeader::class])->group(function () {
 
-    Route::get('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
 });
 
-Route::middleware([ApiForceAcceptHeader::class, 'auth:api'])->group(function () {
+Route::middleware([ApiForceAcceptHeader::class, 'auth:api','scope:user:read'])->group(function () {
 
     //User medical record
     Route::get('/users/{id}/medicalrecord', [MedicalRecordController::class, 'show_user_medical_record']);
@@ -85,4 +87,25 @@ Route::middleware([ApiForceAcceptHeader::class, 'auth:api'])->group(function () 
 
 });
 
+Route::middleware([ApiForceAcceptHeader::class, 'auth:api',,'scope:user:read'])->group(function () {
 
+    Route::post('/players', [PlayerController::class, 'store']);
+
+    Route::put('/players/{id}', [PlayerController::class, 'update']);
+
+    Route::delete('/players/{id}', [PlayerController::class, 'destroy']);
+
+    Route::post('/players/{id}/medicalrecords', [PlayerController::class, 'store_medicalrecords']);
+
+    Route::post('/teams', [TeamController::class, 'store']);
+
+    Route::put('/teams/{id}', [TeamController::class, 'update']);
+
+    Route::delete('/teams/{id}', [TeamController::class, 'destroy']);
+
+    Route::post('/teams/{id}/players/{id_player}', [TeamController::class, 'store_player']);
+
+    Route::delete('/medicalrecords/{id}', [MedicalRecordController::class, 'destroy']);
+
+    Route::post('/games', [GameController::class, 'store']);
+});
